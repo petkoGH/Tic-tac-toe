@@ -24,16 +24,16 @@ std::map<int, char> fields =
 static const std::array<std::array<const int, 3>, 8> winningFields =
 {
 {
-		{1,2,3},
-		{4,5,6},
-		{7,8,9},
+	{1,2,3},
+	{4,5,6},
+	{7,8,9},
 
-		{1,4,7},
-		{2,5,8},
-		{3,6,9},
+	{1,4,7},
+	{2,5,8},
+	{3,6,9},
 
-		{1,5,9},
-		{3,5,7}
+	{1,5,9},
+	{3,5,7}
 }
 };
 
@@ -44,11 +44,16 @@ private:
 	char m_Symbol;
 public:
 	//returns player name
-	std::string GetName() const { return m_Name; };
+	const std::string GetName() const { return m_Name; };
 	//returns player symbol
-	char GetSymbol() const { return m_Symbol; };
+	const char GetSymbol() const { return m_Symbol; };
 
-	Player(std::string name, char symbol) : m_Name(name), m_Symbol(symbol) {};
+	//sets player name
+	void SetName(std::string name) { m_Name = name; };
+	//sets player symbol
+	void SetSymbol(char symbol) { m_Symbol = symbol; };
+
+	Player() {};
 
 	void Play()
 	{
@@ -157,12 +162,15 @@ bool isWinner(char marker)
 
 bool areAllFieldsSet()
 {
+	//get size of all fields hash map
 	int fieldsSize = fields.size();
 
 	for (int field = 1; field <= fieldsSize; ++field)
 	{
+		//get iterator of field with key == field
 		auto fieldsIterator = fields.find(field);
 
+		//if iterator value != 'x' && 'y' it means that here is empty field 
 		if ((fieldsIterator->second != 'x') && (fieldsIterator->second != 'o'))
 			return false;
 	}
@@ -170,14 +178,19 @@ bool areAllFieldsSet()
 	return true;
 }
 
-bool isGameOver(char playerSymbol, char* outputString)
+bool isGameOver(const std::string& playerName, const char playerSymbol, char* outputString)
 {
+	//check if someone won the game, return true
 	if (isWinner(playerSymbol))
 	{
-		strcpy_s(outputString, 13, "Someone win.");
+		std::string msg = playerName;
+		msg += " won.";
+
+		strcpy_s(outputString, msg.size() + 1, msg.c_str());
 		return true;
 	}
 
+	//if all fields are set, return true
 	if (areAllFieldsSet())
 	{
 		strcpy_s(outputString, 12, "It's a tie!");
@@ -187,33 +200,96 @@ bool isGameOver(char playerSymbol, char* outputString)
 	return false;
 }
 
+void getPlayerNames(Player& playerOne, Player& playerTwo)
+{
+	std::string playerInput;
+
+	//get name of first player and set his name and symbol inside an object
+	printf("Player one, what is your name?\n");
+	std::getline(std::cin, playerInput);
+	playerOne.SetName(playerInput);
+	playerOne.SetSymbol('x');
+
+	//get name of second player and set his name and symbol inside an object
+	printf("Player two, what is your name?\n");
+	std::getline(std::cin, playerInput);
+	playerTwo.SetName(playerInput);
+	playerTwo.SetSymbol('o');
+}
+
+void resetFieldValues()
+{
+	int fieldsSize = fields.size();
+
+	//reset every value of key inside hash map to char value of number that fields belongs to
+	for (int field = 1; field <= fieldsSize; ++field)
+	{
+		auto fieldsIterator = fields.find(field);
+		
+		fieldsIterator->second = static_cast<char>(field);
+	}
+}
+
+char getUserInput()
+{
+	//store user input inside char
+	char userInput;
+
+	printf("Enter 'y' if you want to play again.\n");
+	std::cin >> userInput;
+	//flush the stream buffer so it's empty next time we read from it
+	std::cin.clear();
+
+	return userInput;
+}
+
 int main()
 {
-	printf("Game Started\n");
-	displayFields();
+	Player playerOne;
+	Player playerTwo;
 
-	Player playerOne("Player One", 'x');
-	Player playerTwo("Player Two", 'o');
+	std::array< Player*, 2> players = { &playerOne, &playerTwo };
+
+	getPlayerNames(playerOne, playerTwo);
+
+	printf("Game Started\n");
 
 	char endGameMessage[255] = "";
+	bool gameEnded = false;
 
+	displayFields();
 	while (true)
 	{
-		playerOne.Play();
-		displayFields();
-		if (isGameOver(playerOne.GetSymbol(), endGameMessage))
+		if (!gameEnded)
 		{
-			break;
+			for (auto& player : players)
+			{
+				player->Play();
+				displayFields();
+				if (isGameOver(player->GetName(), player->GetSymbol(), endGameMessage))
+				{
+					gameEnded = true;
+					printf("%s\n", endGameMessage);
+					break;
+				}
+			}
 		}
-		playerTwo.Play();
-		displayFields();
-		if (isGameOver(playerTwo.GetSymbol(), endGameMessage))
+		else
 		{
-			break;
+			char userAnswer = getUserInput();
+
+			if (userAnswer != 'y')
+			{
+				break;
+			}
+
+			gameEnded = false;
+			resetFieldValues();
+			displayFields();
 		}
 		Sleep(20);
 	}
-	printf("%s\n", endGameMessage);
-	printf("Game Ended\n");
 	system("PAUSE");
+
+	return EXIT_SUCCESS;
 }
