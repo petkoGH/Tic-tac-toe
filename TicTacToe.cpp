@@ -110,7 +110,7 @@ void displayFields()
 	//clean the console
 	system("cls");
 
-	//loop through fields hash map
+	//loop through fields in hash map
 	size_t mapSize = fields.size();
 	for (size_t counter = 1; counter <= mapSize; ++counter)
 	{
@@ -153,7 +153,7 @@ bool isWinner(char marker)
 				break;
 			}
 		}
-		//if we find the same symbol in all winning fields won not be changed and we can exit the loop
+		//if we find the same symbol in all winning fields bool "won" won't be changed and we can exit the loop
 		if (won)
 			break;
 	}
@@ -162,12 +162,12 @@ bool isWinner(char marker)
 
 bool areAllFieldsSet()
 {
-	//get size of all fields hash map
+	//get size of all fields in hash map
 	int fieldsSize = fields.size();
 
 	for (int field = 1; field <= fieldsSize; ++field)
 	{
-		//get iterator of field with key == field
+		//get iterator of field where key == field
 		auto fieldsIterator = fields.find(field);
 
 		//if iterator value != 'x' && 'y' it means that here is empty field 
@@ -186,6 +186,7 @@ bool isGameOver(const std::string& playerName, const char playerSymbol, char* ou
 		std::string msg = playerName;
 		msg += " won.";
 
+		//copy winning message + 1 byte for \0 null terminating character
 		strcpy_s(outputString, msg.size() + 1, msg.c_str());
 		return true;
 	}
@@ -193,7 +194,8 @@ bool isGameOver(const std::string& playerName, const char playerSymbol, char* ou
 	//if all fields are set, return true
 	if (areAllFieldsSet())
 	{
-		strcpy_s(outputString, 12, "It's a tie!");
+		char message[] = "It's a tie!";
+		strcpy_s(outputString, sizeof(message), message);
 		return true;
 	}
 
